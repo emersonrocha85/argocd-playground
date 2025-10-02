@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: meuapp-deployment
+  labels:
+    app: meuapp
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: meuapp
+  template:
+    metadata:
+      labels:
+        app: meuapp
+    spec:
+      containers:
+        - name: meuapp-container
+          image: nginx:latest
+          ports:
+            - containerPort: 80
+          envFrom:
+            - configMapRef:
+                name: meuapp-config
+          volumeMounts:
+            - name: config-volume
+              mountPath: /usr/share/nginx/html/index.html
+              subPath: index.html
+      volumes:
+        - name: config-volume
+          configMap:
+            name: meuapp-config
+            items:
+              - key: APP_MESSAGE
+                path: index.html
