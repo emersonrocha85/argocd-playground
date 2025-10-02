@@ -1,0 +1,83 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: meuapp-config
+  labels:
+    app: meuapp
+data:
+  APP_MESSAGE: "Olá do ConfigMap no ArgoCD!"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: meuapp-deployment
+  labels:
+    app: meuapp
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: meuapp
+  template:
+    metadata:
+      labels:
+        app: meuapp
+    spec:
+      containers:
+        - name: meuapp-container
+          image: nginx:latest
+          ports:
+            - containerPort: 80
+          envFrom:
+            - configMapRef:
+                name: meuapp-config
+          volumeMounts:
+            - name: config-volume
+              mountPath: /usr/share/nginx/html/index.html
+              subPath: index.html
+      volumes:
+        - name: config-volume
+          configMap:
+            name: meuapp-config
+            items:
+              - key: APP_MESSAGE
+                path: index.html
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: meuapp-service
+  labels:
+    app: meuapp
+spec:
+  type: ClusterIP
+  selector:
+    app: meuapp
+  ports:
+    - port: 80
+      targetPort: 80
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: meuapp-ingress
+  labels:
+    app: meuapp
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: meuapp.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: meuapp-service
+                port:
+                  number: 80
