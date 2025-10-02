@@ -5,4 +5,4 @@ metadata:
   labels:
     app: meuapp
 data:
-  APP_MESSAGE: "Ola do ConfigMap no ArgoCD V2!"
+  APP_MESSAGE: "Ola do ConfigMap no ArgoCD V3!"
